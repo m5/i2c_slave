@@ -39,14 +39,11 @@ architecture structural of i2c_decode is
       matches : out std_logic);
   end component;
 
-  signal address : std_logic_vector(7 downto 0);
-
   begin
-    address <= data(7 downto 1) & '0';
     check_addr: matcher_8b
       port map (
         pattern => b"11110000",
-        data    => address,
+        data    => data(7 downto 1) & '0',
         matches => addr_match);
 
     stop_start_det : edge_detector
@@ -59,6 +56,6 @@ architecture structural of i2c_decode is
         falling => stop_flag);
 
     rw_flag <= data(0);
-    mack_flag <= not sda_in;
+    mack_flag <= not data(0);
     
 end structural;
