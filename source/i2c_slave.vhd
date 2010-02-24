@@ -1,3 +1,8 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
 entity i2c_slave is
   port(
     CLK        : in  std_logic;
@@ -113,6 +118,7 @@ architecture structural of i2c_slave is
       sda_ack    : in  std_logic;
       sda_out    : out std_logic);
   end component;
+  signal sr_sda_out : std_logic;
 
   component i2c_scl_cntr
     port (
@@ -120,10 +126,9 @@ architecture structural of i2c_slave is
       scl         : in  std_logic;
       rst_n       : in  std_logic;
       cnt_en      : in  std_logic;
-      ack_cnt_en  : out std_logic;
+      ack_cnt_en  : in std_logic;
       stop_rcving : out std_logic);
   end component;
-  signal ack_cnt_en  : std_logic;
   signal stop_rcving : std_logic;
   
 begin
@@ -170,8 +175,8 @@ begin
       clk       => CLK,
       scl       => scl_sync,
       rst_n     => RST_N,
-      ctrl      => ctrl,
-      slsi      => slsi,
+      ctrl      => rxsr_ctrl,
+      slsi      => SDA_IN,
       rxsr_data => rxsr_data);
 
   txsr_8bit_1 : txsr_8bit
@@ -179,7 +184,7 @@ begin
       clk       => CLK,
       scl       => scl_sync,
       rst_n     => RST_N,
-      ctrl      => ctrl,
+      ctrl      => txsr_ctrl,
       load      => rdata,
       txsr_data => sr_sda_out);
   
@@ -187,7 +192,7 @@ begin
     port map (
       clk     => CLK,
       rst_n   => RST_N,
-      renable => renable,
+      renable => tx_renable,
       wenable => TX_WENABLE,
       wdata   => TX_WDATA,
       rdata   => rdata,

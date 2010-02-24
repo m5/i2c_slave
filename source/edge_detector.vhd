@@ -16,8 +16,9 @@ end edge_detector;
 architecture behavioral of edge_detector is
   signal old_sig : std_logic;
   signal cur_sig : std_logic;
-
-  process(clk, rst, sig, en) is
+begin
+  process(clk, rst, sig, enable)
+  begin
     if rst = '1' then
       old_sig <= sig;
       cur_sig <= sig;

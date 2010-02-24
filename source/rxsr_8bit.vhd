@@ -1,3 +1,8 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
 entity rxsr_8bit is
   port(
     clk       : in std_logic;
@@ -19,15 +24,20 @@ architecture structural of rxsr_8bit is
       data_in  : in  std_logic_vector(7 downto 0);
       data_out : out std_logic_vector(7 downto 0));
   end component;
+  signal shift_clock : std_logic;
+  signal shift_in    : std_logic_vector(7 downto 0);
 
 begin
+  shift_clock <= scl and ctrl;
+  shift_in    <= b"0000000" & slsi;
+
   op_register_8b_1 : op_register_8b
     port map (
-      clk      => scl and ctrl,
+      clk      => shift_clock,
       rst      => rst_n,
       op       => b"010",
       in_en    => b"00000001",
-      data_in  => b"0000000"& slsi,
+      data_in  => shift_in,
       data_out => rxsr_data);
 end structural;
 

@@ -1,3 +1,8 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
 entity i2c_sda_sel is
   port(
     sda_out_en : in  std_logic;

@@ -1,3 +1,8 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
 entity txsr_8bit is
   port(
     clk       : in  std_logic;
@@ -33,7 +38,7 @@ begin
   op_reg_in_en <= b"11111111" when ctrl = b"11" else
                   b"00000000";
 
-  op_reg_clk <= not scl when ctrl = b"10" or b"11" else '1';
+  op_reg_clk <= not scl when ctrl = b"10" or ctrl = b"11" else '1';
 
   txsr_data <= op_reg_out(7);
 

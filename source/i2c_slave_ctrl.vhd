@@ -1,3 +1,8 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
 entity i2c_slave_ctrl is
   port(
     clk         : in  std_logic;
@@ -30,7 +35,7 @@ architecture behavioral of i2c_slave_ctrl is
     speaking,
     listening,
     heard,
-    yawning,
+    yawning
     );
 
   signal state      : state_type;
@@ -73,9 +78,9 @@ begin
                         if stop_rcving = '1' then
                           if addr_match = '1' then
                             if rw_flag = '1' then
-                              next_state <= ack_speak;
+                              next_state <= ack_will_speak;
                             else
-                              next_state <= ack_listen;
+                              next_state <= ack_heard;
                             end if;
                           else
                             next_state <= bored;
@@ -91,7 +96,7 @@ begin
                           if mack_flag <= '1' then
                             next_state <= listening;
                           else
-                            next_state <= ack_listen;
+                            next_state <= ack_heard;
                           end if;
                         end if;
                         
@@ -132,9 +137,9 @@ begin
                          next_state <= yawning;
                        else
                          if stop_rcving = '1' then
-                           next_state = check_heard;
+                           next_state <= check_heard;
                          else
-                           next_state = speaking;
+                           next_state <= speaking;
                          end if;
                        end if;
                        
@@ -142,9 +147,9 @@ begin
                           next_state <= yawning;
                         else
                           if stop_rcving = '1' then
-                            next_state = ack_heard;
+                            next_state <= ack_heard;
                           else
-                            next_state = listening;
+                            next_state <= listening;
                           end if;
                         end if;
 
@@ -270,9 +275,8 @@ begin
         cnt_en     <= '0';
         ack_cnt_en <= '0';
         tx_renable <= '0';
+      end case;
     end process;
-  end case;
-  
 
 end behavioral;
 

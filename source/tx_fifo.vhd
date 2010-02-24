@@ -1,3 +1,8 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
 entity tx_fifo is
   port(
     clk     : in  std_logic;
@@ -10,6 +15,8 @@ entity tx_fifo is
     full    : out std_logic
     );
 end tx_fifo;
+
+LIBRARY ECE337_IP;
 
 architecture structural of tx_fifo is
   component Fifo337IP
@@ -26,11 +33,15 @@ architecture structural of tx_fifo is
       );
   end component;
 
+  signal wclock_in : std_logic;
+
 begin
+  wclock_in <= not clk;
+
   Fifo337IP_1 : Fifo337IP
     port map (
       rclk    => clk,
-      wclk    => not clk,
+      wclk    => wclock_in,
       rst_n   => rst_n,
       renable => renable,
       wenable => wenable,
