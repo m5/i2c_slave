@@ -25,16 +25,14 @@ end i2c_slave_ctrl;
 architecture behavioral of i2c_slave_ctrl is
   type state_type is (
     bored,
-    curious,
     dazed,
+    curious,
     ack_will_speak,
-    ack_heard,
-    check_heard,
+    nack_listen,
     speech_prep1,
     speech_prep2,
     speaking,
-    listening,
-    heard,
+    check_heard,
     yawning
     );
 
@@ -62,7 +60,7 @@ begin
   begin
     case state is
       when bored => if start_flag = '1' then
-                      next_state <= curious;
+                      next_state <= dazed;
                     else
                       next_state <= bored;
                     end if;
@@ -80,7 +78,7 @@ begin
                             if rw_flag = '1' then
                               next_state <= ack_will_speak;
                             else
-                              next_state <= ack_heard;
+                              next_state <= nack_listen;
                             end if;
                           else
                             next_state <= bored;
@@ -90,13 +88,13 @@ begin
                         end if;
                       end if;
 
-      when ack_heard => if start_flag = '1' or stop_flag = '1' then
+      when nack_listen => if start_flag = '1' or stop_flag = '1' then
                           next_state <= yawning;
                         else
                           if mack_flag <= '1' then
-                            next_state <= listening;
+                            next_state <= bored;
                           else
-                            next_state <= ack_heard;
+                            next_state <= nack_listen;
                           end if;
                         end if;
                         
@@ -104,7 +102,7 @@ begin
       when ack_will_speak => if start_flag = '1' or stop_flag = '1' then
                                next_state <= yawning;
                              else
-                               if mack_flag <= '1' then
+                               if mack_flag <= '0' then
                                  next_state <= speech_prep1;
                                else
                                  next_state <= ack_will_speak;
@@ -142,16 +140,6 @@ begin
                            next_state <= speaking;
                          end if;
                        end if;
-                       
-      when listening => if start_flag = '1' or stop_flag = '1' then
-                          next_state <= yawning;
-                        else
-                          if stop_rcving = '1' then
-                            next_state <= ack_heard;
-                          else
-                            next_state <= listening;
-                          end if;
-                        end if;
 
       when yawning => next_state <= bored;
 
@@ -189,13 +177,13 @@ begin
       when curious =>
         sda_ack    <= '1';
         sda_out_en <= '0';
-        rxsr_ctrl  <= '0';
+        rxsr_ctrl  <= '1';
         txsr_ctrl  <= b"00";
         cnt_en     <= '1';
         ack_cnt_en <= '0';
         tx_renable <= '0';
         
-      when ack_heard =>
+      when nack_listen =>
         sda_ack    <= '0';
         sda_out_en <= '0';
         rxsr_ctrl  <= '0';
@@ -245,15 +233,6 @@ begin
         sda_out_en <= '1';
         rxsr_ctrl  <= '0';
         txsr_ctrl  <= "01";
-        cnt_en     <= '0';
-        ack_cnt_en <= '0';
-        tx_renable <= '0';
-        
-      when listening =>
-        sda_ack    <= '1';
-        sda_out_en <= '0';
-        rxsr_ctrl  <= '1';
-        txsr_ctrl  <= b"00";
         cnt_en     <= '0';
         ack_cnt_en <= '0';
         tx_renable <= '0';
