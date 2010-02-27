@@ -1,6 +1,6 @@
 -- $Id: $
 -- File name:   tb_i2c_scl_cntr.vhd
--- Created:     2/25/2010
+-- Created:     2/26/2010
 -- Author:      Micah Fivecoate
 -- Lab Section: 337-04
 -- Version:     1.0  Initial Test Bench
@@ -65,7 +65,7 @@ begin
 
 --   GOLD: <GOLD_NAME> port map(<put mappings here>);
 
-process is
+process
   procedure reset is
   begin 
     clk <= '0';
@@ -75,7 +75,6 @@ process is
     ack_cnt_en <= '0';
     wait for 10 ns;
     rst_n <= '0';
-    
   end reset;
 
   procedure tick is
@@ -84,8 +83,9 @@ process is
     wait for 10 ns;
     clk <= '1';
     wait for 10 ns;
-    clk <- '0';
+    clk <= '0';
   end tick;
+
 
   procedure multitick(
     constant count : integer) is
@@ -95,34 +95,54 @@ process is
     end loop;
   end multitick;
 
+  procedure tock is
   begin
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    scl <= '1';
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    scl <= '0';
+    tick;
+  end tock;
+
+  procedure multitock(
+    constant count : integer) is
+  begin
+    for i in 1 to count loop
+      tock;
+    end loop;
+  end multitock;
+
+  begin
+
     reset;
     cnt_en <= '1';
-    multitick(10);
-    cnt_en <= '0';
     tick;
-    ack_cnt_en <= '1';
-    multitick(5);
-    ack_cnt_en <= '0';
+    tock;
+    tock;
+    tock;
     tick;
+    tock;
+    tock;
+    tock;
+    tock;
+    tock;
+    tock;
+    tock;
+    tock;
+    tock;
+    wait;
     
-    cnt_en <= '1';
-    multitick(3);
-    cnt_en <= '0';
-    tick;
-    ack_cnt_en <= '1';
-    multitick(5);
-    ack_cnt_en <= '0';
-    tick;
-
-    cnt_en <= '1';
-    multitick(9);
-    cnt_en <= '0';
-    tick;
-    ack_cnt_en <= '1';
-    multitick(1);
-    ack_cnt_en <= '0';
-    tick;
-
+    
   end process;
 end TEST;
