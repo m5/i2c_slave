@@ -43,7 +43,7 @@ begin
   process (clk, rst_n)
   begin
     if rst_n = '1' then
-      state <= idle;
+      state <= bored;
     elsif clk'event and clk = '1' then
       state <= next_state;
     end if;
@@ -240,7 +240,7 @@ begin
       --      3) Set tx_renable. This will decrement the read pointer when SCL
       --         goes to HIGH at the beginning of the ACK cycle
       -------------------------------------------------------------------------
-      when receive_ack =>
+      when recieve_ack =>
         sda_ack    <= 'Z';
         sda_out_en <= '0';
         rxsr_ctrl  <= '0';
