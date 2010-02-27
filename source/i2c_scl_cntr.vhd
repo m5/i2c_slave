@@ -40,6 +40,7 @@ architecture structural of i2c_scl_cntr is
   signal cnt_reset : std_logic;
   signal rising    : std_logic;
   signal falling   : std_logic;
+  signal over_full : std_logic;
 
 begin
   -----------------------------------------------------------------------------
@@ -52,9 +53,11 @@ begin
   -- the controller know that it's time for a new tx cycle
   -----------------------------------------------------------------------------  
   stop_flag   <= '1'     when count = b"00001001" else '0';
+  over_full   <= '1' when count = b"00001010" else '0';
   stop_rcving <= stop_flag;
   cnt_reset   <= not cnt_en
-                 or '1' when count = b"00001010" else '0';
+                 or over_full
+                 or rst_n;
 
   edge_detector_1 : edge_detector
     port map (
