@@ -69,6 +69,13 @@ architecture TEST of tb_i2c_slave_ctrl is
   signal ack_cnt_en : std_logic;
   signal tx_renable : std_logic;
 
+   signal good_sda_ack   : std_logic; 
+   signal good_sda_out_en: std_logic; 
+   signal good_rxsr_ctrl : std_logic; 
+   signal good_txsr_ctrl : std_logic_vector(1 downto 0); 
+   signal good_cnt_en    : std_logic; 
+   signal good_ack_cnt_en: std_logic; 
+   signal good_tx_renable: std_logic; 
 -- signal <name> : <type>;
 
 begin
@@ -93,12 +100,94 @@ begin
 --   GOLD: <GOLD_NAME> port map(<put mappings here>);
 
 process is
+
+
+      procedure idle is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '0';
+        good_txsr_ctrl  <= b"00";
+        good_cnt_en     <= '0';
+        good_ack_cnt_en <= '0';
+        good_tx_renable <= '0';
+      end idle;
+        
+      procedure start_on is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '0';
+        good_txsr_ctrl  <= b"00";
+        good_cnt_en     <= '0';
+        good_ack_cnt_en <= '0';
+        good_tx_renable <= '0';
+      end start_on;
+
+      procedure address_loading is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '1';
+        good_txsr_ctrl  <= b"00";
+        good_cnt_en     <= '1';
+        good_ack_cnt_en <= '0';
+        good_tx_renable <= '0';
+      end address_loading;
+
+      procedure address_full is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '1';
+        good_txsr_ctrl  <= b"00";
+        good_cnt_en     <= '1';
+        good_ack_cnt_en <= '0';
+        good_tx_renable <= '0';
+      end address_full;
+
+      procedure send_ack is begin
+        good_sda_ack    <= '0';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '0';
+        good_txsr_ctrl  <= b"11";
+        good_cnt_en     <= '1';
+        good_ack_cnt_en <= '1';
+        good_tx_renable <= '0';
+      end send_ack;
+
+      procedure transmit_data is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '1';
+        good_rxsr_ctrl  <= '0';
+        good_txsr_ctrl  <= b"10";
+        good_cnt_en     <= '1';
+        good_ack_cnt_en <= '0';
+        good_tx_renable <= '0';
+      end transmit_data;
+
+      procedure receive_ack is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '0';
+        good_txsr_ctrl  <= b"00";
+        good_cnt_en     <= '1';
+        good_ack_cnt_en <= '1';
+        good_tx_renable <= '1';
+      end receive_ack;
+        
+      procedure ack_received is begin
+        good_sda_ack    <= 'Z';
+        good_sda_out_en <= '0';
+        good_rxsr_ctrl  <= '0';
+        good_txsr_ctrl  <= b"11";
+        good_cnt_en     <= '0';
+        good_ack_cnt_en <= '0';
+        good_tx_renable <= '1';
+      end ack_received;
+
   procedure tick is
   begin
     wait for 10 ns;
-    clk <= '1';
-    wait for 10 ns;
     clk <= '0';
+    wait for 10 ns;
+    clk <= '1';
   end tick;
 
   procedure start is
@@ -106,12 +195,13 @@ process is
     tick;
     tick;
     start_flag <= '1';
-    tick;
-    tick;
+    addr_match <= '0';
+    mack_flag <= '1';
     tick;
     start_flag <= '0';
     stop_rcving <= '0';
     tick;
+    address_loading;
     tick;
   end start;
 
@@ -122,76 +212,145 @@ process is
     stop_flag <= '1';
     stop_rcving <= '0';
     tick;
-    tick;
-    tick;
     stop_flag <= '0';
     tick;
+    idle;
     tick;
   end stop;
 
-  procedure match is
+  procedure rmatch is
   begin
     tick;
     tick;
     stop_rcving <= '1';
     addr_match <= '1';
-  end match;
+    rw_flag <= '1';
+    tick;
+    address_full;
+    tick;
+    send_ack;
+    tick;
+  end rmatch;
 
-  procedure nmatch is
+  procedure wmatch is
+  begin
+    tick;
+    tick;
+    stop_rcving <= '1';
+    addr_match <= '1';
+    rw_flag <= '0';
+    tick;
+    address_full;
+    tick;
+    idle;
+    tick;
+  end wmatch;
+
+  procedure nrmatch is
   begin
     tick;
     tick;
     stop_rcving <= '1';
     addr_match <= '0';
-  end nmatch;
+    tick;
+    address_full;
+    tick;
+    idle;
+    tick;
+    tick;
+  end nrmatch;
+
+  procedure nwmatch is
+  begin
+    tick;
+    tick;
+    rw_flag <= '1';
+    stop_rcving <= '1';
+    addr_match <= '0';
+    tick;
+    address_full;
+    tick;
+    idle;
+  end nwmatch;
+
+  procedure sack is
+  begin
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    addr_match <= '0';
+    tick;
+    transmit_data;
+  end sack;
 
   procedure read is
   begin
-    rw_flag <= '1';
-    tick;
-    tick;
-    stop_rcving <= '0';
+    transmit_data;
     tick;
     tick;
     tick;
-    mack_flag <= '0';
-    addr_match <= '0';
     tick;
     tick;
     tick;
-    mack_flag <= '1';
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
     tick;
   end read;
 
   procedure write is
   begin
-    rw_flag <= '0';
+    idle;
     tick;
     tick;
-    stop_rcving <= '0';
-    addr_match <= '0';
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
+    tick;
   end write;
 
   procedure gack is
   begin
+    stop_rcving <= '1';
+    tick;
+    receive_ack;
     tick;
     mack_flag <= '0';
     tick;
+    ack_received;
     tick;
     tick;
+    tick;
+    tick;
+    stop_rcving <= '0';
     mack_flag <= '1';
     tick;
   end gack;
 
   procedure gnack is
   begin
+     stop_rcving <= '1';
+     tick;
+     receive_ack;
+     tick;
+     mack_flag <= '1';
      tick;
      tick;
      tick;
      tick;
      tick;
      tick;
+     stop_rcving <= '0';
      tick;
+     idle;
+     transmit_data;
   end gnack;
 
   procedure rend is
@@ -200,11 +359,12 @@ process is
     tick;
     stop_rcving <= '1';
     tick;
-    tick;
+    receive_ack;
   end rend;
 
   procedure reset is
   begin
+    idle;
     clk <= '0';
     rst_n <= '1';
     start_flag <= '0';
@@ -222,79 +382,18 @@ process is
     reset;
 
     start;
-    match;
+    rmatch;
+    sack;
     read;
-    rend;
+    gack;
+    read;
+    gack;
+    read;
     gack;
     stop;
 
-    start;
-    stop;
-
-    start;
-    nmatch;
-    stop;
-
-    start;
-    match;
-    read;
-    stop;
 
 
-    start;
-    nmatch;
-    read;
-    rend;
-    gack;
-    stop;
-
-    start;
-    match;
-    write;
-    rend;
-    gack;
-    stop;
-
-    start;
-    match;
-    start;
-    stop;
-
-    start;
-    nmatch;
-    stop;
-
-    start;
-    match;
-    read;
-    rend;
-    gnack;
-    stop;
-
-    start;
-    match;
-    read;
-    rend;
-    gack;
-    stop;
-
-    start;
-    match;
-    read;
-    rend;
-    gack;
-    read;
-    rend;
-    gack;
-    read;
-    rend;
-    gack;
-    read;
-    rend;
-    gack;
-    read;
-    rend;
-    stop;
 
 
   end process;
